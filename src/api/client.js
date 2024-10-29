@@ -11,17 +11,22 @@ export const getSurveys = () => {
   return request.then(response => response.data);
 };
 
+export const updateSurvey = (id, survey) => {
+  const request = axios.request({
+    method: 'PUT',
+    baseURL: baseUrl,
+    url: `${baseUrl}/surveys/${id}`,
+    data: survey
+  })
+  return request.then(response => response.data)
+}
+
 export const updateTask = (id, task) => {
-  const {surveyId, number, response} = task;
   const request = axios.request({
     method: 'PUT',
     baseURL: baseUrl,
     url: `${baseUrl}/tasks/${id}`,
-    data: {
-      surveyId,
-      number,
-      response
-    }
+    data: task
   })
   return request.then(response => response.data)
 }

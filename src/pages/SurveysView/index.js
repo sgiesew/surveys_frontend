@@ -1,28 +1,42 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { MaterialReactTable } from 'material-react-table';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
+import React from "react";
+import { useState, useEffect } from "react";
+import { MaterialReactTable } from "material-react-table";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
 import { getSurvey, getSurveys } from "../../api/client";
-import RespondentSurveyView from './RespondentSurveyView';
+import RespondentSurveyView from "./RespondentSurveyView";
+import SupervisorSurveyView from "./SupervisorSurveyView";
 import { useForm } from "react-hook-form";
 
 const columns = [
   {
-    header: 'Name',
-    accessorKey: 'surveyType.name',
+    header: "Name",
+    accessorKey: "surveyType.name",
     enableColumnFilter: false,
     enableSorting: false
   },
   {
-    header: 'Completed',
-    accessorKey: 'num_completed',
+    header: "Statements",
+    accessorKey: "num_tasks",
+    enableColumnFilter: false,
+    enableSorting: false
+  },
+  {
+    header: "Rated",
+    accessorKey: "num_completed",
+    enableColumnFilter: false,
+    enableSorting: false
+  },
+  {
+    header: "Submitted",
+    accessorFn: (row) => row.completed.toString(),
     enableColumnFilter: false,
     enableSorting: false
   }
 ];
 
-const RespondentView = () => {
+const RespondentView = ({respondent}) => {
+  //const [isRespondent, setIsRespondent] = useState(respondent);
 
   const [surveys, setSurveys] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -31,6 +45,7 @@ const RespondentView = () => {
   const [showDetailView, setShowDetailView] = useState(false);
   const [survey, setSurvey] = useState(null);
   const [currentTask, setCurrentTask] = useState(0);
+  const [numCompleted, setNumCompleted] = useState(0);
 
   const { register, getValues, handleSubmit, reset } = useForm();
   const onSubmit = data => console.log(data);
@@ -46,15 +61,16 @@ const RespondentView = () => {
 
   useEffect(() => {
     fetchSurveys();
-  }, []);
+  }, [showDetailView]);
 
   const fetchSurvey = id => {
     getSurvey(id)
-      .then(data => {
-        setSurvey(data);
+      .then(survey => {
+        setSurvey(survey);
         setFetchingDetail(false);
-        setCurrentTask(0);
-        reset({response: data.tasks.map(task => task.response)});
+        setCurrentTask(survey.current_task);
+        setNumCompleted(survey.num_completed);
+        reset({response: survey.tasks.map(task => task.response)});
       });
   };
 
@@ -73,24 +89,36 @@ const RespondentView = () => {
       alignItems="center"
       minHeight="100vh"
     >
-    <CircularProgress />
-      </Box>
+      <CircularProgress />
+    </Box>
     );
   };
+  
   return (
     <Box sx={{ m: 2 }}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <RespondentSurveyView
+      {respondent ?
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <RespondentSurveyView
+            survey={survey}
+            showDetailView={showDetailView}
+            setShowDetailView={setShowDetailView}
+            fetchingDetail={fetchingDetail}
+            currentTask={currentTask}
+            setCurrentTask={setCurrentTask}
+            numCompleted={numCompleted}
+            setNumCompleted={setNumCompleted}
+            register={register}
+            getValues={getValues}
+          />
+        </form>
+        :
+        <SupervisorSurveyView
           survey={survey}
           showDetailView={showDetailView}
           setShowDetailView={setShowDetailView}
           fetchingDetail={fetchingDetail}
-          currentTask={currentTask}
-          setCurrentTask={setCurrentTask}
-          register={register}
-          getValues={getValues}
         />
-      </form>
+      }
       <MaterialReactTable
         data={surveys}
         columns={columns}
@@ -100,7 +128,7 @@ const RespondentView = () => {
             showDetailViewFor(row.original.id);
           },
           sx: {
-            cursor: 'pointer',
+            cursor: "pointer",
           },
         })}
       />

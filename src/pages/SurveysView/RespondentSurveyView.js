@@ -16,7 +16,7 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
 //import { useForm } from "react-hook-form";
-import { updateTask } from "../../api/client";
+import { updateTask, updateSurvey } from "../../api/client";
 
 const ratingScale = [
   "Don't know",
@@ -27,18 +27,30 @@ const ratingScale = [
   "Strongly disagree"
 ];
 
-const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, register, getValues}) => {
+const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, numCompleted, setNumCompleted, register, getValues}) => {
 
   const onClose = () => {
     if (survey){
-      //console.log(getValues("response[]"));
+      console.log(getValues("response[]"));
+      var num_completed = 0;
       survey.tasks.forEach( (task, index) => {
-        task.response = parseInt(getValues(`response[${index}]`));
-        updateTask(task.id, task)
-          .then(data => {
-            console.log(`task ${task.id} updated`)
-          });
+        const response = parseInt(getValues(`response[${index}]`));
+        if (response !== 0){
+          survey.tasks[index].response = response;
+          num_completed++;
+          updateTask(task.id, task)
+            .then(data => {
+              console.log(`task ${task.id} updated`)
+            });
+        }
       })
+      survey.num_completed = num_completed;
+      survey.current_task = currentTask;
+      console.log(survey);
+      updateSurvey(survey.id, survey)
+        .then(data => {
+          console.log(`survey ${survey.id} updated`)
+        });
     }
     setShowDetailView(false);
   };
@@ -79,7 +91,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
         <AppBar sx={{ position: "relative" }}>
           <Toolbar variant="dense">
             <Typography sx={{ flex: 1 }} variant="h6" component="div">
-              <div>{survey.surveyType.name} ({survey.num_completed} / {survey.tasks.length})</div>
+              {survey.surveyType.name} ({survey.num_completed} / {survey.num_tasks})
             </Typography>
             <IconButton
               edge="start"
@@ -99,14 +111,6 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
           {survey.tasks.map( (v, task) => {
             if (task !== currentTask)
               return (<Box key={task}></Box>);
-            /*
-            setResponded(responded.map( (r, index) => {
-                if (index === currentTask)
-                  return true;
-                else
-                  return r;
-              }));
-            */
             return (
               <Box key={task}>
                 <Box
@@ -115,7 +119,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
                   alignItems="center"
                 >
                   <Typography variant="h3">
-                    {survey.surveyType.statements[task].text}.
+                    ({currentTask + 1}) {survey.surveyType.statements[task].text}.
                   </Typography>
                 </Box>
                 <Box
@@ -132,7 +136,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
                       aria-labelledby="response-group"
                       name="response-group"
                       defaultValue={getValues(`response[${task}]`)}
-                      >
+                    >
                       {ratingScale.map( (value, index) => {
                         const visibility = index === 0 ? "hidden" : "visible";
                         return (
@@ -147,6 +151,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
                             value={index}
                             key={index}
                             name="response"
+                            disabled={survey.completed}
                             {...register(`response[${task}]`)}
                             inputProps={{ 'aria-label': {value} }}
                           />
@@ -165,29 +170,50 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
             flexDirection="row"
             justifyContent="space-around"
           >
-          <Button
-            variant="outlined"
-            onClick={() => {
-              if (currentTask > 0){
-                setCurrentTask(currentTask - 1);
-              }
-            }}
-            >
-            Previous
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              if (currentTask < survey.tasks.length - 1){
-                setCurrentTask(currentTask + 1);
-              }
-            }}
-            >
-            Next
-          </Button>
             <Button
               variant="outlined"
-              type="submit"
+              onClick={() => {
+                if (currentTask > 0){
+                  if (parseInt(survey.tasks[currentTask].response) === 0 && parseInt(getValues(`response[${currentTask}]`)) !== 0){
+                    survey.num_completed = survey.num_completed + 1;
+                    console.log(survey.num_completed);
+                  }
+                  setCurrentTask(currentTask - 1);
+                }
+              }}
+              >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                if (currentTask < survey.tasks.length - 1){
+                  if (parseInt(survey.tasks[currentTask].response) === 0 && parseInt(getValues(`response[${currentTask}]`)) !== 0){
+                    survey.num_completed = survey.num_completed + 1;
+                    console.log(survey.num_completed);
+                  }
+                  setCurrentTask(currentTask + 1);
+                }
+              }}
+              >
+              Next
+            </Button>
+            <Button
+              variant="outlined"
+              visible={!survey.completed}
+              onClick={() => {
+                var empty = false;
+                survey.tasks.forEach( (task, index) => {
+                  const response = parseInt(getValues(`response[${index}]`));
+                  if (response === 0){
+                    empty = true;
+                  }
+                });
+                if (!empty){
+                  survey.completed = true;
+                  onClose();
+                }
+              }}
               >
               Submit
             </Button>
