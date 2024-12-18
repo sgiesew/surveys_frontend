@@ -35,8 +35,7 @@ const columns = [
   }
 ];
 
-const RespondentView = ({respondent}) => {
-  //const [isRespondent, setIsRespondent] = useState(respondent);
+const SurveysView = ({respondent}) => {
 
   const [surveys, setSurveys] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -45,8 +44,7 @@ const RespondentView = ({respondent}) => {
   const [showDetailView, setShowDetailView] = useState(false);
   const [survey, setSurvey] = useState(null);
   const [currentTask, setCurrentTask] = useState(0);
-  const [numCompleted, setNumCompleted] = useState(0);
-
+  
   const { register, getValues, handleSubmit, reset } = useForm();
   const onSubmit = data => console.log(data);
 
@@ -69,7 +67,6 @@ const RespondentView = ({respondent}) => {
         setSurvey(survey);
         setFetchingDetail(false);
         setCurrentTask(survey.current_task);
-        setNumCompleted(survey.num_completed);
         reset({response: survey.tasks.map(task => task.response)});
       });
   };
@@ -105,8 +102,6 @@ const RespondentView = ({respondent}) => {
             fetchingDetail={fetchingDetail}
             currentTask={currentTask}
             setCurrentTask={setCurrentTask}
-            numCompleted={numCompleted}
-            setNumCompleted={setNumCompleted}
             register={register}
             getValues={getValues}
           />
@@ -138,4 +133,4 @@ const RespondentView = ({respondent}) => {
 
 };
 
-export default RespondentView;
+export default SurveysView;

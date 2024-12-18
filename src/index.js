@@ -5,8 +5,10 @@ import {
   Navigate,
   RouterProvider,
 } from "react-router-dom";
+import { ConfirmProvider } from "material-ui-confirm";
 import LayoutComponent from "./pages/LayoutComponent";
-import RespondentView from "./pages/SurveysView";
+import SurveysView from "./pages/SurveysView";
+import SurveyTypesView from "./pages/SurveyTypesView";
 import ErrorPage from "./pages/ErrorPage";
 
 const router = createBrowserRouter([
@@ -17,11 +19,15 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/home",
-        element: <RespondentView respondent={true} />
+        element: <SurveysView respondent={true} />
       },
       {
         path: "/home/supervisor",
-        element: <RespondentView respondent={false} />
+        element: <SurveysView respondent={false} />
+      },
+      {
+        path: "/home/manager",
+        element: <SurveyTypesView />
       }
     ]
   },
@@ -34,6 +40,8 @@ const router = createBrowserRouter([
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ConfirmProvider>
+      <RouterProvider router={router} />
+    </ConfirmProvider>
   </React.StrictMode>
 );

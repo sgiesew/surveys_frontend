@@ -15,7 +15,6 @@ import Slide from "@mui/material/Slide";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
-//import { useForm } from "react-hook-form";
 import { updateTask, updateSurvey } from "../../api/client";
 
 const ratingScale = [
@@ -27,7 +26,7 @@ const ratingScale = [
   "Strongly disagree"
 ];
 
-const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, numCompleted, setNumCompleted, register, getValues}) => {
+const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, register, getValues}) => {
 
   const onClose = () => {
     if (survey){
