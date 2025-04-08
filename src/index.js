@@ -26,8 +26,12 @@ const router = createBrowserRouter([
         element: <SurveysView respondent={false} />
       },
       {
+        path: "/home/supervisor2",
+        element: <SurveyTypesView edit={false}/>
+      },
+      {
         path: "/home/manager",
-        element: <SurveyTypesView />
+        element: <SurveyTypesView edit={true}/>
       }
     ]
   },

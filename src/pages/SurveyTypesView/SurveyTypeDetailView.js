@@ -13,13 +13,23 @@ import Slide from "@mui/material/Slide";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
-import { createSurveyType, updateSurveyType, updateStatement, createStatement, deleteStatement } from "../../api/client";
+import { useConfirm } from "material-ui-confirm";
+import { createSurveyType, updateSurveyType } from "../../api/client";
 
 
-const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, fetchingDetail, isNew, register, fields, append, remove, getValues, handleSubmit, errors, wasDeleted, setWasDeleted}) => {
+const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, fetchingDetail, isNew, register, fields, append, remove, getValues, handleSubmit, errors, wasDeleted, setWasDeleted, wasChanged, setWasChanged}) => {
 
+  const confirm = useConfirm();
+  
   const onClose = () => {
     if (surveyType){
+      if (isNew){
+        surveyType = {
+          name: "",
+          statements: []
+        };
+      }
+
       surveyType.name = getValues("name");
       if (!surveyType.name){
         alert("Please provide a name!");
@@ -29,7 +39,20 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
         alert("Please provide statements!");
         return;
       }
-      
+
+      surveyType.statements = [];
+
+      fields.forEach( (field, index) => {
+        var text = getValues(`statements[${index}].text`)
+          const statement = {
+            id: field.ident,
+            surveyTypeId: surveyType.id,
+            number: index,
+            text: text
+          }
+          surveyType.statements.push(statement);
+      });
+ 
       if (isNew){
         createSurveyType(surveyType)
         .then(data => {
@@ -43,41 +66,25 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
           console.log(`surveyType ${surveyType.id} updated`);
         });
       }
-      
-      if (wasDeleted && !isNew){
-        surveyType.statements.forEach( (statement, index) => {
-          deleteStatement(statement.id);
-          console.log(`statement ${statement.id} deleted`);
-        });        
-      }
-      fields.forEach( (field, index) => {
-        const text = getValues(`statements.${index}.text`);
-        if (field.ident && !(wasDeleted || isNew)){
-          const statement = {
-            id: field.ident,
-            number: index,
-            text: text
-          }
-          updateStatement(statement.id, statement)
-          .then(data => {
-            console.log(`statement ${statement.id} updated`)
-          });
-        }
-        else {
-          const statement = {
-            number: index,
-            text: text,
-            surveyTypeId: surveyType.id
-          }
-          createStatement(statement)
-          .then(data => {
-            console.log(`new statement created`)
-          });
-        }
-      });
     }
     setShowDetailView(false);
   };
+
+  const handleClose = () => {
+    if (wasChanged || wasDeleted){
+        confirm({title: "Save changes?"})
+        .then(() => {
+          onClose();
+        })
+        .catch(() => {
+          setShowDetailView(false);
+        });
+    }
+    else {
+      setShowDetailView(false);
+    }
+  };
+
 
   const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -89,7 +96,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
         fullScreen
         TransitionComponent={fetchingDetail ? Transition : undefined}
         open={showDetailView}
-        onClose={onClose}
+        onClose={handleClose}
       >
         <Box
           display="flex"
@@ -108,7 +115,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
       fullWidth
       maxWidth="md"
       open={showDetailView}
-      onClose={onClose}
+      onClose={handleClose}
     >
       <DialogTitle
         sx={{ m: 0, p: 0 }}
@@ -121,7 +128,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
             <IconButton
               edge="start"
               color="inherit"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="close"
             >
               <CloseIcon />
@@ -137,9 +144,10 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
         </Typography>
         <input
           defaultValue={surveyType.name}
-          {...register("name", {
-            required: <p>error message</p>
-          })} 
+          onInput={() => {
+            setWasChanged(true);
+          }}
+          {...register("name")} 
         />
         <Typography sx={{ flex: 1 }} variant="h6" component="div">
           Statements:
@@ -156,6 +164,9 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
                   <Box>
                     <input
                       key={field.id}
+                      onInput={() => {
+                        setWasChanged(true);
+                      }}
                       defaultValue={getValues(`statements.${index}.text`)}
                       {...register(`statements.${index}.text`)} 
                     />
@@ -197,7 +208,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
               variant="outlined"
               onClick={onClose}
               >
-              Submit
+              Save
             </Button>
           </Box>
       </DialogContent>

@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 import { useConfirm } from "material-ui-confirm";
 import { getSurveyType, getSurveyTypes, deleteSurveyType } from "../../api/client";
 import SurveyTypeDetailView from "./SurveyTypeDetailView";
@@ -23,7 +23,7 @@ const columns = [
   }
 ];
 
-const SurveyTypesView = () => {
+const SurveyTypesView = ({edit}) => {
 
   const [surveyTypes, setSurveyTypes] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -33,6 +33,7 @@ const SurveyTypesView = () => {
   const [showDetailView, setShowDetailView] = useState(false);
   const [surveyType, setSurveyType] = useState(null);
   const [isNew, setIsNew] = useState(false);
+  const [wasChanged, setWasChanged] = useState(false);
 
   const { register, getValues, handleSubmit, reset, control, errors } = useForm();
   const { fields, append, remove } = useFieldArray({
@@ -62,16 +63,20 @@ const SurveyTypesView = () => {
         setFetchingDetail(false);
         setIsNew(false);
         reset({statements: surveyType.statements.map( (statement) => {return( {ident: statement.id, text: statement.text } )} )});
+        setWasChanged(false);
         setWasDeleted(false);
       });
   };
 
   const addSurveyType = () => {
     setSurveyType([]);
-    reset();
+    reset({statements: []});
+    setWasChanged(false);
+    setWasDeleted(false);
     setIsNew(true);
     setShowDetailView(true);
-}
+  };
+  
   const handleRemoveSurveyType = id => {
     confirm()
       .then(() => {
@@ -124,6 +129,8 @@ const SurveyTypesView = () => {
           handleSubmit={handleSubmit}
           wasDeleted={wasDeleted}
           setWasDeleted={setWasDeleted}
+          wasChanged={wasChanged}
+          setWasChanged={setWasChanged}
         />
       </form>
       <MaterialReactTable
@@ -131,8 +138,9 @@ const SurveyTypesView = () => {
         columns={columns}
         getRowId={(row) => row.id}
         enableRowActions={true}
-        positionActionsColumn={'last'}
+        positionActionsColumn={"last"}
         renderRowActions={({ row }) => (
+          edit &&
           <Box>
             <IconButton onClick={() => showDetailViewFor(row.original.id)}>
               <EditIcon />
@@ -143,6 +151,7 @@ const SurveyTypesView = () => {
           </Box>
         )}
         renderTopToolbarCustomActions={() => (
+          edit &&
           <Button
             variant="outlined"
             onClick={() => addSurveyType()}

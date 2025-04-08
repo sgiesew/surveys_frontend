@@ -15,7 +15,7 @@ import Slide from "@mui/material/Slide";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
-import { updateTask, updateSurvey } from "../../api/client";
+import { updateSurvey } from "../../api/client";
 
 const ratingScale = [
   "Don't know",
@@ -37,10 +37,6 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
         if (response !== 0){
           survey.tasks[index].response = response;
           num_completed++;
-          updateTask(task.id, task)
-            .then(data => {
-              console.log(`task ${task.id} updated`)
-            });
         }
       })
       survey.num_completed = num_completed;
@@ -199,7 +195,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
             </Button>
             <Button
               variant="outlined"
-              visible={!survey.completed}
+              disabled={survey.completed}
               onClick={() => {
                 var empty = false;
                 survey.tasks.forEach( (task, index) => {
