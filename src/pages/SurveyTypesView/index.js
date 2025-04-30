@@ -20,6 +20,12 @@ const columns = [
     accessorKey: "name",
     enableColumnFilter: false,
     enableSorting: false
+  },
+  {
+    header: "Status",
+    accessorKey: "surveyTypeStatus.usid",
+    enableColumnFilter: false,
+    enableSorting: false
   }
 ];
 
