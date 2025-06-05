@@ -17,40 +17,36 @@ import { useConfirm } from "material-ui-confirm";
 import { createSurveyType, updateSurveyType } from "../../api/client";
 
 
-const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, fetchingDetail, isNew, register, fields, append, remove, getValues, handleSubmit, errors, wasDeleted, setWasDeleted, wasChanged, setWasChanged}) => {
+const SurveyTypeDetailView = (props) => {
+  const {surveyType, showDetailView, setShowDetailView, fetchingDetail, isNew, register, fields, append, remove, getValues, handleSubmit, errors, wasChanged, setWasChanged} = props;
 
   const confirm = useConfirm();
   
   const onClose = () => {
     if (surveyType){
-      if (isNew){
-        surveyType = {
-          name: "",
-          statements: []
-        };
-      }
 
       surveyType.name = getValues("name");
       if (!surveyType.name){
-        alert("Please provide a name!");
+        confirm({title: "Please provide a name!", hideCancelButton: true});
         return;
       }
-      else if (!getValues("statements")){
-        alert("Please provide statements!");
+      surveyType.statements = getValues("statements");
+      if (surveyType.statements.length === 0){
+        confirm({title: "Please provide statements!", hideCancelButton: true});
         return;
       }
 
       surveyType.statements = [];
 
       fields.forEach( (field, index) => {
-        var text = getValues(`statements[${index}].text`)
-          const statement = {
-            id: field.ident,
-            surveyTypeId: surveyType.id,
-            number: index,
-            text: text
-          }
-          surveyType.statements.push(statement);
+        var text = getValues(`statements[${index}].text`);
+        const statement = {
+          id: field.ident,
+          surveyTypeId: surveyType.id,
+          number: index,
+          text: text
+        };
+        surveyType.statements.push(statement);
       });
  
       if (isNew){
@@ -58,27 +54,28 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
         .then(data => {
           surveyType.id = data.id;
           console.log(`surveyType ${surveyType.id} created`);
+          setShowDetailView(false);
         });
       }
       else {
         updateSurveyType(surveyType.id, surveyType)
         .then(data => {
           console.log(`surveyType ${surveyType.id} updated`);
+          setShowDetailView(false);
         });
       }
     }
-    setShowDetailView(false);
   };
 
   const handleClose = () => {
-    if (wasChanged || wasDeleted){
-        confirm({title: "Save changes?"})
-        .then(() => {
-          onClose();
-        })
-        .catch(() => {
-          setShowDetailView(false);
-        });
+    if (wasChanged){
+      confirm({title: "Save changes?", confirmationText: "Yes", cancellationText: "No"})
+      .then(() => {
+        onClose();
+      })
+      .catch(() => {
+        setShowDetailView(false);
+      });
     }
     else {
       setShowDetailView(false);
@@ -144,6 +141,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
         </Typography>
         <input
           defaultValue={surveyType.name}
+          disabled={surveyType.surveyTypeStatusId !== 1}
           onInput={() => {
             setWasChanged(true);
           }}
@@ -164,6 +162,7 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
                   <Box>
                     <input
                       key={field.id}
+                      disabled={surveyType.surveyTypeStatusId !== 1}
                       onInput={() => {
                         setWasChanged(true);
                       }}
@@ -171,46 +170,53 @@ const SurveyTypeDetailView = ({ surveyType, showDetailView, setShowDetailView, f
                       {...register(`statements.${index}.text`)} 
                     />
                   </Box>
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      remove(index);
-                      setWasDeleted(true);
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  {surveyType.surveyTypeStatusId === 1 && (
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        remove(index);
+                        setWasChanged(true);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </Box>
               </Grid>
             </Grid>
           )
         })}
-          <Button
-            variant="outlined"
-            onClick={() => {
-              append({ text: "" });
-            }}
+        {surveyType.surveyTypeStatusId === 1 && (
+          <div>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                append({ text: "" });
+                setWasChanged(true);
+              }}
+              >
+              Add Statement
+            </Button>
+            <Box
+              display="flex"
+              flexDirection="row"
+              justifyContent="space-around"
             >
-            Add Statement
-          </Button>
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="space-around"
-          >
-            <Button
-              variant="outlined"
-              onClick={() => setShowDetailView(false)}
-              >
-              Cancel
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={onClose}
-              >
-              Save
-            </Button>
-          </Box>
+              <Button
+                variant="outlined"
+                onClick={() => setShowDetailView(false)}
+                >
+                Cancel
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={onClose}
+                >
+                Save
+              </Button>
+            </Box>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

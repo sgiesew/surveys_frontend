@@ -17,28 +17,28 @@ const ratingScale = [
   "[no answer]",
   "Strongly agree",
   "Somewhat agree",
-  "Neither agree nor disagree",
+  "Neither",
   "Somewhat disagree",
   "Strongly disagree"
 ];
 
-const SupervisorSurveyView = (props) => {
-  const { survey, showDetailView, setShowDetailView, fetchingDetail} = props;
+const SurveyTypeResultsView = (props) => {
+  const { surveyType, tasks, showResultsView, setShowResultsView, fetchingResults} = props;
 
   const onClose = () => {
-    setShowDetailView(false);
+    setShowResultsView(false);
   };
 
   const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
   });
 
-  if (fetchingDetail || !survey) {
+  if (fetchingResults || tasks.length === 0) {
     return (
       <Dialog
         fullScreen
-        TransitionComponent={fetchingDetail ? Transition : undefined}
-        open={showDetailView}
+        TransitionComponent={fetchingResults ? Transition : undefined}
+        open={showResultsView}
         onClose={onClose}
       >
         <Box
@@ -57,7 +57,7 @@ const SupervisorSurveyView = (props) => {
     <Dialog
       fullWidth
       maxWidth="md"
-      open={showDetailView}
+      open={showResultsView}
       onClose={onClose}
     >
       <DialogTitle
@@ -66,7 +66,7 @@ const SupervisorSurveyView = (props) => {
         <AppBar sx={{ position: "relative" }}>
           <Toolbar variant="dense">
             <Typography sx={{ flex: 1 }} variant="h6" component="div">
-              {survey.surveyType.name} ({survey.completed ? <>submitted</> : <>{survey.num_completed} / {survey.num_tasks}</>})
+              {surveyType.name}
             </Typography>
             <IconButton
               edge="start"
@@ -80,7 +80,7 @@ const SupervisorSurveyView = (props) => {
         </AppBar>
       </DialogTitle>
       <DialogContent
-        sx={{ m: 10, p: 0, backgroundColor: "#eee" }}
+        sx={{ m: 2, p: 0, backgroundColor: "#eee" }}
       >
         <Grid container spacing={0}>
           <Grid xs={6}>
@@ -93,33 +93,45 @@ const SupervisorSurveyView = (props) => {
           <Grid xs={6}>
             <Box>
               <Typography variant="h6">
-                Response
+                Responses
               </Typography>
             </Box>
           </Grid>
         </Grid>
-        {survey.tasks.map( (task, index) => (
+        {surveyType.statements.map( (statement, index) => (
             <Grid container spacing={0} key={index}>
-              <Grid xs={6}>
+              <Grid xs={2}>
                 <Box>
                   <Typography>
-                    ({index + 1}) {survey.surveyType.statements[index].text}.
+                    ({index + 1}) {statement.text}.
                   </Typography>
                 </Box>
               </Grid>
-              <Grid xs={6}>
-                <Box>
-                  <Typography>
-                    {ratingScale[task.response]}
-                  </Typography>
-                </Box>
+              <Grid xs={10}>
+                <Grid container spacing={0} key={index}>
+                  {ratingScale.map( (rating, i) => {
+                    if (i === 0)
+                      return (<div></div>);
+                    else return (
+                      <Grid xs={2} sx={{ m: 1}}>
+                        <Box>
+                          <Typography>
+                            {rating}
+                          </Typography>
+                          <Typography>
+                              {tasks.filter( task => task.number === index && task.response === i).length}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                  )})}
+                </Grid>
               </Grid>
             </Grid>
-          )
+        )
         )}
       </DialogContent>
     </Dialog>
   );
 };
 
-export default SupervisorSurveyView;          
+export default SurveyTypeResultsView;          

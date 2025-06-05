@@ -1,6 +1,5 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -15,7 +14,7 @@ import Slide from "@mui/material/Slide";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
-import { updateSurvey } from "../../api/client";
+import { updateSurvey, getSurveyType, updateSurveyType } from "../../api/client";
 
 const ratingScale = [
   "Don't know",
@@ -26,7 +25,8 @@ const ratingScale = [
   "Strongly disagree"
 ];
 
-const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, register, getValues}) => {
+const RespondentSurveyView = (props) => {
+  const {survey, showDetailView, setShowDetailView, fetchingDetail, currentTask, setCurrentTask, register, getValues, confirm} = props;
 
   const onClose = () => {
     if (survey){
@@ -45,10 +45,33 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
       updateSurvey(survey.id, survey)
         .then(data => {
           console.log(`survey ${survey.id} updated`)
+          setShowDetailView(false);
+          if (survey.completed){
+            getSurveyType(survey.surveyTypeId)
+            .then(surveyType => {
+              surveyType.num_completed++;
+              surveyType.statements = null;
+              updateSurveyType(surveyType.id, surveyType)
+                .then(data => {
+                  console.log(`surveyType ${surveyType.id} updated`);
+                });
+            }
+          )};
         });
     }
-    setShowDetailView(false);
+    else {
+      setShowDetailView(false);
+    }
   };
+
+  const onCancel = () => {
+    if (!survey.completed){
+      onClose();
+    }
+    else {
+      setShowDetailView(false);
+    }
+  }
 
   const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -91,7 +114,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
             <IconButton
               edge="start"
               color="inherit"
-              onClick={onClose}
+              onClick={onCancel}
               aria-label="close"
             >
               <CloseIcon />
@@ -160,6 +183,7 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
                 </Box>
               </Box>
             )})}
+
           <Box
             display="flex"
             flexDirection="row"
@@ -197,16 +221,18 @@ const RespondentSurveyView = ({ survey, showDetailView, setShowDetailView, fetch
               variant="outlined"
               disabled={survey.completed}
               onClick={() => {
-                var empty = false;
-                survey.tasks.forEach( (task, index) => {
-                  const response = parseInt(getValues(`response[${index}]`));
-                  if (response === 0){
-                    empty = true;
-                  }
-                });
-                if (!empty){
-                  survey.completed = true;
-                  onClose();
+                if (!survey.tasks.find( (task, index) => (parseInt(getValues(`response[${index}]`)) === 0) )){
+                  confirm()
+                    .then(() => {
+                      survey.completed = true;
+                      onClose();
+                    })
+                    .catch(() => {
+                      console.log("Survey not submitted");
+                    });
+                }
+                else {
+                  confirm({title: "Please first rate all the statements!", hideCancelButton: true});
                 }
               }}
               >

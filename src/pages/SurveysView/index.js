@@ -7,6 +7,7 @@ import { getSurvey, getSurveys } from "../../api/client";
 import RespondentSurveyView from "./RespondentSurveyView";
 import SupervisorSurveyView from "./SupervisorSurveyView";
 import { useForm } from "react-hook-form";
+import { useConfirm } from "material-ui-confirm";
 
 const columns = [
   {
@@ -29,13 +30,13 @@ const columns = [
   },
   {
     header: "Submitted",
-    accessorFn: (row) => row.completed.toString(),
+    accessorFn: (row) => row.completed ? "✔" : "-",
     enableColumnFilter: false,
     enableSorting: false
   }
 ];
 
-const SurveysView = ({respondent}) => {
+const SurveysView = ({isRespondent}) => {
 
   const [surveys, setSurveys] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -46,8 +47,8 @@ const SurveysView = ({respondent}) => {
   const [currentTask, setCurrentTask] = useState(0);
   
   const { register, getValues, handleSubmit, reset } = useForm();
-  const onSubmit = data => console.log(data);
-
+  const confirm = useConfirm();
+  
   const fetchSurveys = () => {
     setFetching(true);
     getSurveys()
@@ -93,8 +94,8 @@ const SurveysView = ({respondent}) => {
   
   return (
     <Box sx={{ m: 2 }}>
-      {respondent ?
-        <form onSubmit={handleSubmit(onSubmit)}>
+      {isRespondent ?
+        <form>
           <RespondentSurveyView
             survey={survey}
             showDetailView={showDetailView}
@@ -104,6 +105,7 @@ const SurveysView = ({respondent}) => {
             setCurrentTask={setCurrentTask}
             register={register}
             getValues={getValues}
+            confirm={confirm}
           />
         </form>
         :

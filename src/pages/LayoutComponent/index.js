@@ -54,6 +54,10 @@ const LayoutComponent = () => {
     { 
       label: "Manager",
       link: "/home/manager" 
+    },
+    { 
+      label: "Administrator",
+      link: "/home/admin" 
     }
   ]
 

@@ -9,6 +9,7 @@ import { ConfirmProvider } from "material-ui-confirm";
 import LayoutComponent from "./pages/LayoutComponent";
 import SurveysView from "./pages/SurveysView";
 import SurveyTypesView from "./pages/SurveyTypesView";
+import PeopleView from "./pages/PeopleView";
 import ErrorPage from "./pages/ErrorPage";
 
 const router = createBrowserRouter([
@@ -19,19 +20,23 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/home",
-        element: <SurveysView respondent={true} />
+        element: <SurveysView isRespondent={true} />
       },
       {
         path: "/home/supervisor",
-        element: <SurveysView respondent={false} />
+        element: <SurveysView isRespondent={false} />
       },
       {
         path: "/home/supervisor2",
-        element: <SurveyTypesView edit={false}/>
+        element: <SurveyTypesView isManager={false}/>
       },
       {
         path: "/home/manager",
-        element: <SurveyTypesView edit={true}/>
+        element: <SurveyTypesView isManager={true}/>
+      },
+      {
+        path: "/home/admin",
+        element: <PeopleView />
       }
     ]
   },

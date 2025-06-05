@@ -11,6 +11,16 @@ export const getSurveys = () => {
   return request.then(response => response.data);
 };
 
+export const createSurvey = survey => {
+  const request = axios.request({
+    method: "POST",
+    baseURL: baseUrl,
+    url: `${baseUrl}/surveys`,
+    data: survey
+  })
+  return request.then(response => response.data)
+}
+
 export const updateSurvey = (id, survey) => {
   const request = axios.request({
     method: "PUT",
@@ -38,6 +48,11 @@ export const getSurveyType = id => {
 
 export const getSurveyTypes = () => {
   const request = axios.get(`${baseUrl}/surveyTypes`);
+  return request.then(response => response.data);
+};
+
+export const getSurveyTypeSurveys = id => {
+  const request = axios.get(`${baseUrl}/surveyTypes/${id}/surveys`);
   return request.then(response => response.data);
 };
 
@@ -98,3 +113,47 @@ export const deleteStatement = id => {
   })
   return request.then(response => response.data)
 }
+
+export const getPeople = () => {
+  const request = axios.get(`${baseUrl}/people`);
+  return request.then(response => response.data);
+};
+
+export const getPerson = id => {
+  const request = axios.get(`${baseUrl}/people/${id}`);
+  return request.then(response => response.data);
+};
+
+export const createPerson = person => {
+  const request = axios.request({
+    method: "POST",
+    baseURL: baseUrl,
+    url: `${baseUrl}/people`,
+    data: person
+  })
+  return request.then(response => response.data)
+}
+
+export const updatePerson = (id, person) => {
+  const request = axios.request({
+    method: "PUT",
+    baseURL: baseUrl,
+    url: `${baseUrl}/people/${id}`,
+    data: person
+  })
+  return request.then(response => response.data)
+}
+
+export const deletePerson = id => {
+  const request = axios.request({
+    method: "DELETE",
+    baseURL: baseUrl,
+    url: `${baseUrl}/people/${id}`,
+  })
+  return request.then(response => response.data)
+}
+
+export const getRoles = () => {
+  const request = axios.get(`${baseUrl}/roles`);
+  return request.then(response => response.data);
+};
