@@ -1,15 +1,9 @@
 
-SURVEYS FRONTEND
+A webapp for a group of researchers to conduct surveys. The surveys consist of a list of statements that are rated on a 5-point scale (from "strongly agree" down to "strongly disagree"). The researchers create a survey, and assign a supervisor to it. The supervisor assigns the survey to a group of respondents. The supervisor tracks each respondent's progress. When all respondents have completed the survey, the results can be viewed in a chart.
 
+## User Roles
 
-Features
-========
-
-This is a webapp for a group of researchers to conduct surveys. The surveys consist of a list of statements that are rated on a 5-point scale (from "strongly agree" down to "strongly disagree"). The researchers create a survey, and assign a supervisor to it. The supervisor assigns the survey to a group of respondents. The supervisor tracks each respondent's progress. When all respondents have completed the survey, the results can be viewed in a chart.
-
-##User Roles
-
-###Respondent
+### Respondent
 
 - views list of the surveys assigned to him/her
 - opens a survey
@@ -18,7 +12,7 @@ This is a webapp for a group of researchers to conduct surveys. The surveys cons
 - closes survey view
 - submits survey (only if completed)
 
-###Supervisor
+### Supervisor
 
 - views list of the surveys assigned to him/her, including survey status (assigned/running/completed)
 - assigns newly created survey to respondents
@@ -26,7 +20,7 @@ This is a webapp for a group of researchers to conduct surveys. The surveys cons
 - views respondents' answers
 - ends survey (only if all respondents have completed)
 
-###Manager
+### Manager
 
 - creates user accounts, assigns role & password
 - views list of users
