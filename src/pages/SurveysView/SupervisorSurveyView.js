@@ -56,7 +56,7 @@ const SupervisorSurveyView = (props) => {
   return (
     <Dialog
       fullWidth
-      maxWidth="md"
+      maxWidth="sm"
       open={showDetailView}
       onClose={onClose}
     >
@@ -80,7 +80,7 @@ const SupervisorSurveyView = (props) => {
         </AppBar>
       </DialogTitle>
       <DialogContent
-        sx={{ m: 10, p: 0, backgroundColor: "#eee" }}
+        sx={{ m: 2 }}
       >
         <Grid container spacing={0}>
           <Grid xs={6}>
@@ -110,7 +110,7 @@ const SupervisorSurveyView = (props) => {
               <Grid xs={6}>
                 <Box>
                   <Typography>
-                    {ratingScale[task.response]}
+                    "{ratingScale[task.response]}"
                   </Typography>
                 </Box>
               </Grid>

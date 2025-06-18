@@ -19,7 +19,7 @@ const PeopleView = () => {
   const columns = [
     {
       header: "Name",
-      accessorKey: "realName",
+      accessorKey: "fullName",
       enableColumnFilter: false,
       enableSorting: false
     },
@@ -47,11 +47,11 @@ const PeopleView = () => {
   const fetchPeople = () => {
     setFetching(true);
     getPeople()
-      .then(data => {
-        setPeople(data);
+      .then(res => {
+        setPeople(res.data);
         getRoles()
-          .then(data => {
-            setRoles(data);
+          .then(res => {
+            setRoles(res.data);
             setFetching(false);
           });
       });
@@ -63,8 +63,8 @@ const PeopleView = () => {
 
   const fetchPerson = id => {
     getPerson(id)
-      .then(person => {
-        setPerson(person);
+      .then(res => {
+        setPerson(res.data);
         setFetchingDetail(false);
         setIsNew(false);
       });
@@ -155,7 +155,8 @@ const PeopleView = () => {
         }}
         renderTopToolbarCustomActions={() => (
           <Button
-            variant="outlined"
+            variant="contained"
+            color="secondary"
             onClick={() => addPerson()}
           >
             New User

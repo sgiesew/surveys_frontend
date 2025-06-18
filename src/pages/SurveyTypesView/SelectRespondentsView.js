@@ -42,8 +42,8 @@ const SelectRespondentsView = (props) => {
           num_tasks: surveyType.statementsCount
         };
         createSurvey(survey)
-          .then(data => {
-            survey.id = data.id;
+          .then(res => {
+            survey.id = res.data.id;
             console.log(`survey ${survey.id} created`);
           });
       }
@@ -53,7 +53,7 @@ const SelectRespondentsView = (props) => {
     surveyType.num_surveys = num_selected;
     surveyType.statements = null;
     updateSurveyType(surveyType.id, surveyType)
-      .then(data => {
+      .then(res => {
         console.log(`surveyType ${surveyType} updated`);
         setShowRespondentsView(false);
       });
@@ -101,11 +101,9 @@ const SelectRespondentsView = (props) => {
                 id={index}
                 type="checkbox"
                 value={false}
-                //checked={getValues(`respondents[${index}]`)}
-                //{...register(`respondents[${index}]`)}
                 {...register("respondents")}
               />
-              <ListItemText primary={person.realName} />
+              <ListItemText primary={person.fullName} />
             </ListItemButton>
           ))}
         </Box>

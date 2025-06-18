@@ -5,8 +5,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
+import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import InputLabel from "@mui/material/InputLabel";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -15,13 +17,14 @@ import {
   Poll as PollIcon
 } from "@mui/icons-material";
 import { useConfirm } from "material-ui-confirm";
+import { getRole } from "../../utils/role.js";
 import { useForm, useFieldArray } from "react-hook-form";
 import SurveyTypeDetailView from "./SurveyTypeDetailView";
 import SelectRespondentsView from "./SelectRespondentsView";
 import SurveyTypeResultsView from "./SurveyTypeResultsView";
 import { getSurveyType, getSurveyTypes, updateSurveyType, deleteSurveyType, getPeople, getSurveyTypeSurveys } from "../../api/client";
 
-const SurveyTypesView = ({isManager}) => {
+const SurveyTypesView = () => {
 
   const columns = [
     {
@@ -35,22 +38,25 @@ const SurveyTypesView = ({isManager}) => {
       id: "supervisor",
       accessorFn: (row) => {
         if (row.person){
-          return row.person.realName;
+          return row.person.fullName;
         }
         else {
           return (
             <div>
-              <Select
-                id="supervisor-select"
-                label="Assign"
-                value="0"
-                onChange={(event) => handleSupervisorMenuChange(event, row.id)}
-              >
-                <MenuItem disabled key={0} value="0"><em>Assign to</em></MenuItem>
-                {people.filter(person => person.roleId >= 2).map( (person, index) => (
-                  <MenuItem key={index + 1} value={person.id}>{person.realName}</MenuItem>
-                ))}
-              </Select>
+              <FormControl variant="standard">
+                <Select
+                  id="supervisor-select"
+                  label="Assign"
+                  value="0"
+                  size="small"
+                  onChange={(event) => handleSupervisorMenuChange(event, row.id)}
+                >
+                  <MenuItem disabled key={0} value="0"><em>Assign to</em></MenuItem>
+                  {people.filter(person => person.roleId === 2).map( (person, index) => (
+                    <MenuItem key={index + 1} value={person.id}>{person.fullName}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </div>
           )
         }
@@ -61,9 +67,8 @@ const SurveyTypesView = ({isManager}) => {
     {
       header: "Status",
       id: "status",
-      size: 1,
       accessorFn: (row) => {
-        if (isManager || row.surveyTypeStatus.usid !== "Assigned"){
+        if (getRole() === "Manager" || row.surveyTypeStatus.usid !== "Assigned"){
           return row.surveyTypeStatus.usid;
         }
         else {
@@ -85,14 +90,12 @@ const SurveyTypesView = ({isManager}) => {
       accessorKey: "num_surveys",
       enableColumnFilter: false,
       enableSorting: false,
-      size: 1
     },
     {
       header: "Completed",
       accessorKey: "num_completed",
       enableColumnFilter: false,
       enableSorting: false,
-      size: 1
     }
   ];
 
@@ -126,11 +129,11 @@ const SurveyTypesView = ({isManager}) => {
   const fetchSurveyTypes = () => {
     setFetching(true);
     getSurveyTypes()
-      .then(data => {
-        setSurveyTypes(data);
+      .then(res => {
+        setSurveyTypes(res.data);
         getPeople()
-        .then(data => {
-          setPeople(data);
+        .then(res => {
+          setPeople(res.data);
           setFetching(false);
         });
       });
@@ -138,11 +141,12 @@ const SurveyTypesView = ({isManager}) => {
 
   useEffect(() => {
     fetchSurveyTypes();
-  }, [showDetailView, showRespondentsView, updated, isManager]);
+  }, [showDetailView, showRespondentsView, updated]);
 
   const fetchSurveyType = id => {
     getSurveyType(id)
-      .then(surveyType => {
+      .then(res => {
+        const surveyType = res.data;
         setSurveyType(surveyType);
         setFetchingDetail(false);
         setIsNew(false);
@@ -168,7 +172,7 @@ const SurveyTypesView = ({isManager}) => {
     confirm()
       .then(() => {
         deleteSurveyType(id)
-        .then(surveyType => {
+        .then(res => {
           setUpdated(!updated);
           console.log("SurveyType deleted");
         });
@@ -186,7 +190,7 @@ const SurveyTypesView = ({isManager}) => {
           statements: null
         };
         updateSurveyType(id, surveyType)
-        .then(data => {
+        .then(res => {
           console.log(`surveyType ${id} updated`);
           setUpdated(!updated);
         });
@@ -199,6 +203,7 @@ const SurveyTypesView = ({isManager}) => {
   const showDetailViewFor = id => {
     fetchSurveyType(id);
     setSurveyType([]);
+    setTasks([]);
     setShowDetailView(true);
     setFetchingDetail(true);
   };
@@ -211,7 +216,7 @@ const SurveyTypesView = ({isManager}) => {
         statements: null
       };
       updateSurveyType(id, surveyType)
-      .then(data => {
+      .then(res => {
         console.log(`surveyType ${id} updated`);
         setUpdated(!updated);
       });
@@ -221,20 +226,22 @@ const SurveyTypesView = ({isManager}) => {
   const showRespondentsViewFor = id => {
     reset({respondents: []});
     setSurveyType(surveyTypes.find( surveyType => surveyType.id === id));
+    setTasks([]);
     setShowRespondentsView(true);
   }
 
   const fetchSurveysFor = id => {
     getSurveyType(id)
-      .then(surveyType => {
+      .then(res => {
+        const surveyType = res.data;
         setSurveyType(surveyType);
         getSurveyTypeSurveys(id)
-          .then(surveys => {
+          .then(res => {
+            const surveys = res.data;
             var surveyTasks = [];
             surveys.forEach( survey => {
               surveyTasks.push(...survey.tasks);
             });
-            console.log(surveyTasks);
             setTasks(surveyTasks);
             setFetchingResults(false);
           });
@@ -243,6 +250,7 @@ const SurveyTypesView = ({isManager}) => {
 
   const showResultsViewFor = id => {
     fetchSurveysFor(id);
+    setSurveyType([]);
     setTasks([]);
     setShowResultsView(true);
     setFetchingResults(true);
@@ -296,30 +304,31 @@ const SurveyTypesView = ({isManager}) => {
         tasks={tasks}
         showResultsView={showResultsView}
         setShowResultsView={setShowResultsView}
+        fetchingResults={fetchingResults}
       />
       <MaterialReactTable
         data={surveyTypes}
         columns={columns}
-        initialState={{ columnVisibility: { supervisor: isManager } }} 
+        initialState={{ columnVisibility: { supervisor: getRole() === "Manager" } }} 
         getRowId={(row) => row.id}
         enableRowActions={true}
         positionActionsColumn={"last"}
         renderRowActions={({ row }) => (
-          <Box>
+          <Box sx={{ display: "flex", flexWrap: "nowrap" }}>
             <IconButton onClick={() => showDetailViewFor(row.original.id)}>
               {row.original.surveyTypeStatus.usid === "Draft" ? <EditIcon /> : <VisibilityIcon />}
             </IconButton>
-            {(row.original.surveyTypeStatus.usid === "Draft" || (isManager && row.original.surveyTypeStatus.usid === "Completed")) && (
+            {(row.original.surveyTypeStatus.usid === "Draft" || (getRole() === "Manager" && row.original.surveyTypeStatus.usid === "Completed")) && (
               <IconButton onClick={() => handleRemoveSurveyType(row.original.id)}>
                 <DeleteIcon />
               </IconButton>
             )}
-            {(isManager && row.original.surveyTypeStatus.usid === "Completed") && (
+            {(getRole() === "Manager" && row.original.surveyTypeStatus.usid === "Completed") && (
               <IconButton onClick={() => showResultsViewFor(row.original.id)}>
                 <PollIcon />
               </IconButton>
             )}
-            {(!isManager && row.original.surveyTypeStatus.usid === "Running" && !(row.original.num_completed < row.original.num_surveys)) && (
+            {(getRole() === "Supervisor" && row.original.surveyTypeStatus.usid === "Running" && !(row.original.num_completed < row.original.num_surveys)) && (
               <IconButton onClick={() => handleCloseSurveyType(row.original.id)}>
                 <CheckCircleIcon />
               </IconButton>
@@ -327,12 +336,13 @@ const SurveyTypesView = ({isManager}) => {
           </Box>
         )}
         renderTopToolbarCustomActions={() => (
-          isManager &&
+          getRole() === "Manager" &&
           <Button
-            variant="outlined"
+            variant="contained"
+            color="secondary"
             onClick={() => addSurveyType()}
           >
-            New Survey Type
+            New Survey
           </Button>
         )}
       />

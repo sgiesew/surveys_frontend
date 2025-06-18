@@ -4,6 +4,7 @@ import Grid from "@mui/material/Unstable_Grid2";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -26,9 +27,14 @@ const PersonDetailView = (props) => {
   
   const onClose = () => {
     if (person){
-      person.realName = getValues("realName");
-      if (!person.realName){
-        confirm({title: "Please provide a name!", hideCancelButton: true});
+      person.firstName = getValues("firstName");
+      if (!person.firstName){
+        confirm({title: "Please provide a first name!", hideCancelButton: true});
+        return;
+      }
+      person.lastName = getValues("lastName");
+      if (!person.firstName){
+        confirm({title: "Please provide a last name!", hideCancelButton: true});
         return;
       }
       person.username = getValues("username");
@@ -37,7 +43,7 @@ const PersonDetailView = (props) => {
         return;
       }
       person.password = getValues("password");
-      if (!person.password){
+      if (!person.password && isNew){
         confirm({title: "Please provide a password!", hideCancelButton: true});
         return;
       }
@@ -45,15 +51,15 @@ const PersonDetailView = (props) => {
  
       if (isNew){
         createPerson(person)
-        .then(data => {
-          person.id = data.id;
+        .then(res => {
+          person.id = res.data.id;
           console.log(`person ${person.id} created`);
           setShowDetailView(false);
         });
       }
       else {
         updatePerson(person.id, person)
-        .then(data => {
+        .then(res => {
           console.log(`person ${person.id} updated`);
           setShowDetailView(false);
         });
@@ -104,7 +110,7 @@ const PersonDetailView = (props) => {
   return (
     <Dialog
       fullWidth
-      maxWidth="md"
+      maxWidth="xs"
       open={showDetailView}
       onClose={handleClose}
     >
@@ -114,7 +120,7 @@ const PersonDetailView = (props) => {
         <AppBar sx={{ position: "relative" }}>
           <Toolbar variant="dense">
             <Typography sx={{ flex: 1 }} variant="h6" component="div">
-              Details
+              User Info
             </Typography>
             <IconButton
               edge="start"
@@ -128,44 +134,70 @@ const PersonDetailView = (props) => {
         </AppBar>
       </DialogTitle>
       <DialogContent
-        sx={{ m: 2, p: 0, backgroundColor: "#eee" }}
+        sx={{ m: 2 }}
       >
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
-          Name:
-        </Typography>
-        <input
-          defaultValue={person.realName}
-          onInput={() => {
-            setWasChanged(true);
-          }}
-          {...register("realName")} 
-        />
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
-          Username:
-        </Typography>
-        <input
-          defaultValue={person.username}
-          onInput={() => {
-            setWasChanged(true);
-          }}
-          {...register("username")} 
-        />
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
-          Password:
-        </Typography>
-        <input
-          defaultValue={person.password}
-          onInput={() => {
-            setWasChanged(true);
-          }}
-          {...register("password")} 
-        />
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
+        <Grid container spacing={0}>
+          <Grid xs={6}>
+            <Typography sx={{ mt: 1 }} component="div">
+              First name:
+            </Typography>
+            <input
+              defaultValue={person.firstName}
+              size={15}
+              onInput={() => {
+                setWasChanged(true);
+              }}
+              {...register("firstName")} 
+            />
+          </Grid>
+          <Grid xs={6}>
+            <Typography sx={{ mt: 1 }} component="div">
+              Last name:
+            </Typography>
+            <input
+              defaultValue={person.lastName}
+              size={15}
+              onInput={() => {
+                setWasChanged(true);
+              }}
+              {...register("lastName")} 
+            />
+          </Grid>
+          <Grid xs={6}>
+            <Typography sx={{ mt: 1 }} component="div">
+              Username:
+            </Typography>
+            <input
+              defaultValue={person.username}
+              size={15}
+              onInput={() => {
+                setWasChanged(true);
+              }}
+              {...register("username")} 
+            />
+          </Grid>
+          <Grid xs={6}>
+            <Typography sx={{ mt: 1 }} component="div">
+              {isNew ? <div>Password:</div> : <div>New password:</div>}
+            </Typography>
+            <input
+              defaultValue={""}
+              size={15}
+              onInput={() => {
+                setWasChanged(true);
+              }}
+              {...register("password")} 
+            />
+          </Grid>
+        </Grid>
+        <Typography sx={{ mt: 2 }} component="div">
           Role:
         </Typography>
         <Select
           id="role-select"
           label="Role"
+          size="small"
+          color="secondary"
           defaultValue={person.roleId}
           onChange={() => {
             setWasChanged(true);
@@ -176,25 +208,23 @@ const PersonDetailView = (props) => {
             <MenuItem key={index} value={role.id}>{role.usid}</MenuItem>
           ))}
         </Select>
-        <Box
-          display="flex"
-          flexDirection="row"
-          justifyContent="space-around"
-        >
-          <Button
-            variant="outlined"
-            onClick={() => setShowDetailView(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={onClose}
-          >
-            Save
-          </Button>
-        </Box>
       </DialogContent>
+      <DialogActions>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => setShowDetailView(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={onClose}
+        >
+          Save
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

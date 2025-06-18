@@ -30,7 +30,6 @@ const RespondentSurveyView = (props) => {
 
   const onClose = () => {
     if (survey){
-      console.log(getValues("response[]"));
       var num_completed = 0;
       survey.tasks.forEach( (task, index) => {
         const response = parseInt(getValues(`response[${index}]`));
@@ -41,18 +40,18 @@ const RespondentSurveyView = (props) => {
       })
       survey.num_completed = num_completed;
       survey.current_task = currentTask;
-      console.log(survey);
       updateSurvey(survey.id, survey)
-        .then(data => {
+        .then(res => {
           console.log(`survey ${survey.id} updated`)
           setShowDetailView(false);
           if (survey.completed){
             getSurveyType(survey.surveyTypeId)
-            .then(surveyType => {
+            .then(res => {
+              const surveyType = res.data;
               surveyType.num_completed++;
               surveyType.statements = null;
               updateSurveyType(surveyType.id, surveyType)
-                .then(data => {
+                .then(res => {
                   console.log(`surveyType ${surveyType.id} updated`);
                 });
             }
@@ -99,7 +98,8 @@ const RespondentSurveyView = (props) => {
 
   return (
     <Dialog
-      fullScreen
+      fullWidth
+      maxWidth="md"
       open={showDetailView}
       onClose={onClose}
     >
@@ -123,74 +123,76 @@ const RespondentSurveyView = (props) => {
         </AppBar>
       </DialogTitle>
       <DialogContent
-        sx={{ m: 0, p: 0, backgroundColor: "#eee" }}
+        sx={{ m: 0 }}
       >
-
-          {survey.tasks.map( (v, task) => {
-            if (task !== currentTask)
-              return (<Box key={task}></Box>);
-            return (
-              <Box key={task}>
+        {survey.tasks.map( (v, task) => {
+          if (task !== currentTask)
+            return (<Box key={task}></Box>);
+          return (
+            <Box key={task}>
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Typography variant="h4" sx={{ mt: 1}}>
+                  ({currentTask + 1}) {survey.surveyType.statements[task].text}.
+                </Typography>
+              </Box>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+              >
                 <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Typography variant="h3">
-                    ({currentTask + 1}) {survey.surveyType.statements[task].text}.
-                  </Typography>
-                </Box>
-                <Box
-                  display="flex"
+                  display="inline-flex"
                   flexDirection="column"
-                  alignItems="center"
+                  alignItems="left"
                 >
-                  <Box
-                    display="inline-flex"
-                    flexDirection="column"
-                    alignItems="left"
+                  <RadioGroup
+                    aria-labelledby="response-group"
+                    name="response-group"
+                    defaultValue={getValues(`response[${task}]`)}
                   >
-                    <RadioGroup
-                      aria-labelledby="response-group"
-                      name="response-group"
-                      defaultValue={getValues(`response[${task}]`)}
-                    >
-                      {ratingScale.map( (value, index) => {
-                        const visibility = index === 0 ? "hidden" : "visible";
-                        return (
-                        <Box
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="left"
+                    {ratingScale.map( (value, index) => {
+                      const visibility = index === 0 ? "hidden" : "visible";
+                      return (
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        alignItems="center"
+                        key={index}
+                        sx={{ visibility: visibility }}
+                      >
+                        <Radio
+                          value={index}
                           key={index}
-                          sx={{ visibility: visibility }}
-                          >
-                          <Radio
-                            value={index}
-                            key={index}
-                            name="response"
-                            disabled={survey.completed}
-                            {...register(`response[${task}]`)}
-                            inputProps={{ 'aria-label': {value} }}
-                          />
-                            <Typography variant="h5">
-                              {value}
-                            </Typography>
-                          </Box>
-                        )})}
-                    </RadioGroup>
-                  </Box>
+                          size="small"
+                          name="response"
+                          disabled={survey.completed}
+                          {...register(`response[${task}]`)}
+                          inputProps={{ 'aria-label': {value} }}
+                        />
+                          <Typography variant="h6">
+                            {value}
+                          </Typography>
+                        </Box>
+                      )})}
+                  </RadioGroup>
                 </Box>
               </Box>
-            )})}
-
+            </Box>
+          )})}
           <Box
+            sx={{ mt: 4 }}
             display="flex"
             flexDirection="row"
             justifyContent="space-around"
           >
             <Button
-              variant="outlined"
+              variant="contained"
+              color="secondary"
+              disabled={currentTask === 0}
               onClick={() => {
                 if (currentTask > 0){
                   if (parseInt(survey.tasks[currentTask].response) === 0 && parseInt(getValues(`response[${currentTask}]`)) !== 0){
@@ -205,20 +207,7 @@ const RespondentSurveyView = (props) => {
             </Button>
             <Button
               variant="outlined"
-              onClick={() => {
-                if (currentTask < survey.tasks.length - 1){
-                  if (parseInt(survey.tasks[currentTask].response) === 0 && parseInt(getValues(`response[${currentTask}]`)) !== 0){
-                    survey.num_completed = survey.num_completed + 1;
-                    console.log(survey.num_completed);
-                  }
-                  setCurrentTask(currentTask + 1);
-                }
-              }}
-              >
-              Next
-            </Button>
-            <Button
-              variant="outlined"
+              color="secondary"
               disabled={survey.completed}
               onClick={() => {
                 if (!survey.tasks.find( (task, index) => (parseInt(getValues(`response[${index}]`)) === 0) )){
@@ -237,6 +226,22 @@ const RespondentSurveyView = (props) => {
               }}
               >
               Submit
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              disabled={currentTask === survey.tasks.length - 1}
+              onClick={() => {
+                if (currentTask < survey.tasks.length - 1){
+                  if (parseInt(survey.tasks[currentTask].response) === 0 && parseInt(getValues(`response[${currentTask}]`)) !== 0){
+                    survey.num_completed = survey.num_completed + 1;
+                    console.log(survey.num_completed);
+                  }
+                  setCurrentTask(currentTask + 1);
+                }
+              }}
+              >
+              Next
             </Button>
           </Box>
 

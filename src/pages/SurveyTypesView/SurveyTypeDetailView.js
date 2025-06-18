@@ -4,6 +4,7 @@ import Grid from "@mui/material/Unstable_Grid2";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -51,15 +52,15 @@ const SurveyTypeDetailView = (props) => {
  
       if (isNew){
         createSurveyType(surveyType)
-        .then(data => {
-          surveyType.id = data.id;
+        .then(res => {
+          surveyType.id = res.data.id;
           console.log(`surveyType ${surveyType.id} created`);
           setShowDetailView(false);
         });
       }
       else {
         updateSurveyType(surveyType.id, surveyType)
-        .then(data => {
+        .then(res => {
           console.log(`surveyType ${surveyType.id} updated`);
           setShowDetailView(false);
         });
@@ -110,7 +111,7 @@ const SurveyTypeDetailView = (props) => {
   return (
     <Dialog
       fullWidth
-      maxWidth="md"
+      maxWidth="sm"
       open={showDetailView}
       onClose={handleClose}
     >
@@ -120,7 +121,7 @@ const SurveyTypeDetailView = (props) => {
         <AppBar sx={{ position: "relative" }}>
           <Toolbar variant="dense">
             <Typography sx={{ flex: 1 }} variant="h6" component="div">
-              Details
+              Survey Details
             </Typography>
             <IconButton
               edge="start"
@@ -134,90 +135,96 @@ const SurveyTypeDetailView = (props) => {
         </AppBar>
       </DialogTitle>
       <DialogContent
-        sx={{ m: 2, p: 0, backgroundColor: "#eee" }}
+        sx={{ m: 2 }}
       >
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
+        <Typography sx={{ flex: 1 }} component="div">
           Name:
         </Typography>
         <input
           defaultValue={surveyType.name}
           disabled={surveyType.surveyTypeStatusId !== 1}
+          size="15"
           onInput={() => {
             setWasChanged(true);
           }}
           {...register("name")} 
         />
-        <Typography sx={{ flex: 1 }} variant="h6" component="div">
-          Statements:
+        <Typography sx={{ mt: 2 }} component="div">
+          Statements to rate:
         </Typography>
-        {fields.map( (field, index) => {
-          return (
-            <Grid container spacing={0} key={index}>
-              <Grid xs={12}>
-                <Box
-                  display="flex"
-                  flexDirection="row"
-                  justifyContent="space-between"
-                >
-                  <Box>
-                    <input
-                      key={field.id}
-                      disabled={surveyType.surveyTypeStatusId !== 1}
-                      onInput={() => {
-                        setWasChanged(true);
-                      }}
-                      defaultValue={getValues(`statements.${index}.text`)}
-                      {...register(`statements.${index}.text`)} 
-                    />
-                  </Box>
-                  {surveyType.surveyTypeStatusId === 1 && (
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        remove(index);
-                        setWasChanged(true);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </Box>
-              </Grid>
-            </Grid>
-          )
-        })}
-        {surveyType.surveyTypeStatusId === 1 && (
-          <div>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                append({ text: "" });
-                setWasChanged(true);
-              }}
+        {fields.map( (field, index) => (
+          <Grid container spacing={0} key={index}>
+            <Grid xs={12}>
+              <Box
+                sx={{ mb: 1}}
+                display="flex"
+                flexDirection="row"
+                justifyContent="space-around"
+                alignItems="center"
               >
-              Add Statement
-            </Button>
-            <Box
-              display="flex"
-              flexDirection="row"
-              justifyContent="space-around"
-            >
-              <Button
-                variant="outlined"
-                onClick={() => setShowDetailView(false)}
-                >
-                Cancel
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={onClose}
-                >
-                Save
-              </Button>
-            </Box>
-          </div>
+                  <Typography component="div">
+                    ({index + 1})
+                  </Typography>
+                  <input
+                    key={field.id}
+                    disabled={surveyType.surveyTypeStatusId !== 1}
+                    size="50"
+                    onInput={() => {
+                      setWasChanged(true);
+                    }}
+                    defaultValue={getValues(`statements.${index}.text`)}
+                    {...register(`statements.${index}.text`)} 
+                  />
+                {surveyType.surveyTypeStatusId === 1 && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    color="secondary"
+                    onClick={() => {
+                      remove(index);
+                      setWasChanged(true);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        ))}
+        {surveyType.surveyTypeStatusId === 1 && (
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            sx={{mt: 1}}
+            onClick={() => {
+              append({ text: "" });
+              setWasChanged(true);
+            }}
+          >
+            Add Statement
+          </Button>
         )}
       </DialogContent>
+      {surveyType.surveyTypeStatusId === 1 && (
+        <DialogActions>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => setShowDetailView(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={onClose}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

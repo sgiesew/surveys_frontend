@@ -1,95 +1,77 @@
-import React from "react"
-import { Outlet, useLocation, Link as RouterLink} from "react-router-dom"
-import Box from "@mui/material/Box"
-import Drawer from "@mui/material/Drawer"
-import CssBaseline from "@mui/material/CssBaseline"
-import List from "@mui/material/List"
-import ListItem from "@mui/material/ListItem"
-import ListItemButton from "@mui/material/ListItemButton"
-import ListItemIcon from "@mui/material/ListItemIcon"
-import ListItemText from "@mui/material/ListItemText"
-import { useTheme, styled } from "@mui/material/styles"
+import React from "react";
+import { Outlet, useLocation, useNavigate} from "react-router-dom";
+import Box from "@mui/material/Box";
+import CssBaseline from "@mui/material/CssBaseline";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import { removeToken } from "../../utils/token.js";
+import { getRole } from "../../utils/role.js";
+
 
 const LayoutComponent = () => {
-  const location = useLocation()
-  const theme = useTheme()
-  
-  const Link = React.forwardRef(function Link(itemProps, ref) {
-    return <RouterLink ref={ref} {...itemProps} role={undefined} />
-  })
+  const location = useLocation();
+  const navigate = useNavigate();
+  const theme = useTheme();
 
-  const StyledListItemButton = styled(ListItemButton)({
-    color: theme.palette.text.secondary,
-    "&.Mui-selected": {
-      color: theme.palette.primary.main
-    },
-  })
-  
-  const ListItemLink = (props) => {
-    const { icon, primary, to, selected } = props
-
-    return (
-      <ListItem component={Link} to={to} sx={{ m: 0, p: 0 }}>
-        <StyledListItemButton selected={selected} sx={{ mx: 0, mb: 1, p: 1 }}>
-          {selected ? <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: 40 }}>{icon}</ListItemIcon> : <ListItemIcon sx={{ color: theme.palette.text.secondary, minWidth: 40 }}>{icon}</ListItemIcon>}
-          <ListItemText primary={<b>{primary}</b>}/>
-        </StyledListItemButton>
-      </ListItem>
-    )
-  }
+  const Logout = () => {
+    removeToken();
+    navigate("/login", { replace: true });
+  };
   
   const menuItems = [
     { 
-      label: "Respondent",
-      link: "/home" 
+      label: "Respondents",
+      link: "/home/surveys",
+      visibleFor: ["Supervisor"]
     },
     { 
-      label: "Supervisor (Respondents)",
-      link: "/home/supervisor" 
+      label: "Surveys",
+      link: "/home/surveytypes",
+      visibleFor: ["Supervisor" ,"Manager"]
     },
     { 
-      label: "Supervisor (Surveys)",
-      link: "/home/supervisor2" 
-    },
-    { 
-      label: "Manager",
-      link: "/home/manager" 
-    },
-    { 
-      label: "Administrator",
-      link: "/home/admin" 
+      label: "Users",
+      link: "/home/people",
+      visibleFor: ["Manager"]
     }
   ]
 
-  const drawerWidth = 180
-  
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-          },
-        }}
-        variant="permanent"
-        anchor="left"
-      >
-        <List sx={{ mx: 0, mt: 2, p: 0 }}>
-          {menuItems.map( (item, index) => <ListItemLink key={index} to={item.link} primary={item.label} icon={item.icon} selected={item.link === location.pathname}/>)}
-        </List>
-      </Drawer>
       <Box
         component="main"
         sx={{ flexGrow: 1, bgcolor: "background.default", p: 0 }}
       >
+        <AppBar sx={{ position: "static" }}>
+          <Toolbar variant="dense">
+            <Typography sx={{ flex: 1 }} variant="h6" component="div">
+              {getRole() === "Respondent" ? <>Surveys</> : menuItems.find( item => item.link === location.pathname).label}
+            </Typography>
+            {menuItems.filter(item => item.visibleFor.find(element => element === getRole())).map( (item, index) => (
+              <Button sx={{ color: "#fff" }}
+                key={index}
+                variant="outlined"
+                href={item.link}
+              >
+                {item.label}
+              </Button>
+            ))}
+            <Button sx={{ color: "#fff" }}
+              variant="outlined"
+              onClick={() => Logout()}
+            >
+              Logout
+            </Button>
+          </Toolbar>
+        </AppBar>
         <Outlet></Outlet>
       </Box>
     </Box>
-  )
+  );
 }
 
-export default LayoutComponent
+export default LayoutComponent;

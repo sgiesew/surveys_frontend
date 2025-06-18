@@ -8,10 +8,18 @@ import RespondentSurveyView from "./RespondentSurveyView";
 import SupervisorSurveyView from "./SupervisorSurveyView";
 import { useForm } from "react-hook-form";
 import { useConfirm } from "material-ui-confirm";
+import { getRole } from "../../utils/role.js";
 
 const columns = [
   {
     header: "Name",
+    id: "respondent",
+    accessorFn: (row) => (row.person.fullName),
+    enableColumnFilter: false,
+    enableSorting: false
+  },
+  {
+    header: "Survey",
     accessorKey: "surveyType.name",
     enableColumnFilter: false,
     enableSorting: false
@@ -36,7 +44,7 @@ const columns = [
   }
 ];
 
-const SurveysView = ({isRespondent}) => {
+const SurveysView = () => {
 
   const [surveys, setSurveys] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -52,8 +60,8 @@ const SurveysView = ({isRespondent}) => {
   const fetchSurveys = () => {
     setFetching(true);
     getSurveys()
-      .then(data => {
-        setSurveys(data);
+      .then(res => {
+        setSurveys(res.data);
         setFetching(false);
       });
   };
@@ -64,7 +72,8 @@ const SurveysView = ({isRespondent}) => {
 
   const fetchSurvey = id => {
     getSurvey(id)
-      .then(survey => {
+      .then(res => {
+        const survey = res.data;
         setSurvey(survey);
         setFetchingDetail(false);
         setCurrentTask(survey.current_task);
@@ -94,7 +103,7 @@ const SurveysView = ({isRespondent}) => {
   
   return (
     <Box sx={{ m: 2 }}>
-      {isRespondent ?
+      {getRole() === "Respondent" ?
         <form>
           <RespondentSurveyView
             survey={survey}
@@ -120,6 +129,7 @@ const SurveysView = ({isRespondent}) => {
         data={surveys}
         columns={columns}
         getRowId={(row) => row.id}
+        initialState={{ columnVisibility: { respondent: getRole() === "Supervisor" } }} 
         muiTableBodyRowProps={({ row }) => ({
           onClick: () => {
             showDetailViewFor(row.original.id);
